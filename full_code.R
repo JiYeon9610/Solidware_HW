@@ -1,4 +1,4 @@
-dat<- read.csv(choose.files())
+dat<- read.csv('imports-85_data.csv',header = TRUE)
 dat[dat==""] <- NA
 
 summary(dat)
