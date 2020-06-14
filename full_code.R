@@ -1,10 +1,21 @@
 dat<- read.csv('imports-85_data.csv',header = TRUE)
 dat[dat==""] <- NA
 
+
+
+
+
+
+# 1. Visualizing & Preprocessing
+
 summary(dat)
 str(dat)
 dat<-dat[,-8]
 
+
+
+
+# NA 존재하는 column 및 row 확인
 ##"num.of.doors","bore","stroke" 변수에 NA값 존재 
 colnames(dat)[ apply(dat, 2, anyNA) ]
 sum(is.na(dat$num.of.doors)) ##1개
@@ -16,13 +27,13 @@ which(is.na(dat$num.of.doors))
 which(is.na(dat$bore))
 which(is.na(dat$stroke))
 
+
+
+
+
 ##NA를 포함하고 있는 데이터
+
 dat[c(18,40,41,42,43),]
-
-
-
-
-##https://www.analyticsvidhya.com/blog/2016/03/tutorial-powerful-packages-imputing-missing-values/
 
 ##missForest: implementation of random forest algorithm
 #install.packages("missForest")
@@ -61,16 +72,26 @@ for(i in column_list){
   else{continuous_list=c(continuous_list,i)}
 }
 
-
 #install.packages('GGally')
 library(GGally)
 #ggpairs(dat_imputed[,continuous_list])
 
+
+
+
+# corrplot 이용하여 연속형 변수들 사이의 correlation 확인
 library(corrplot)
 M<-cor(dat_imputed[,continuous_list])
 M
 corrplot(M,order="FPC",method="number")
 ## 1. curb.weight, length, width, price, engine.size / 2. city.mpg, highway.mpg
+
+
+
+
+
+# PCA 차원 축소
+
 
 ggpairs(dat_imputed[,c('curb.weight','length','width','price','engine.size')])
 ## 대체적으로 선형적인 관계성을 가지고 있음. ->PCA 사용
@@ -95,6 +116,9 @@ dat_pca <- subset(dat_imputed, select = -c(curb.weight,length,width,
 dat_pca<-cbind(dat_pca,pca_1_val,PCA2_2)
 
 
+
+
+# Random Forest Importance Plot
 
 library(caret)
 library(dplyr)
@@ -147,6 +171,11 @@ cont_dat<-dat_pca[,continuous_list]
 cat_dat<-dat_pca[,category_list]
 
 
+
+
+
+# 변수 클러스터링(hclustvar)
+
 #install.packages('ClustOfVar')
 library(ClustOfVar)
 cont_dat=cont_dat[,-c(2,8,9)] ##height, PC1,PC2 제외
@@ -174,10 +203,14 @@ final_dat<-dat_pca[,c('normalized_losses','height','make','drive.wheels','num.of
 
 
 
+
+
+
+# 나머지 범주+연속형 변수를 이용하여 변수 클러스터링 진행
+
 library(cluster)
 gower_dist<-daisy(group1_dat, metric="gower",stand=T)
 sil_width<-c(NA)
-
 for(i in 2:12){
   pam_fit <- pam(gower_dist,diss = TRUE,k = i)
   sil_width[i] <- pam_fit$silinfo$avg.width
@@ -188,11 +221,7 @@ df %>% ggplot(aes(x = x, y = y)) + geom_point(size = 3, col = 'red') + geom_line
 
 pam_fit1 <- pam(gower_dist, diss = TRUE, k = 2)
 group1_dat[pam_fit1$medoids,]
-
-
-
 final_dat$cluster_group1 <- pam_fit1$clustering
-
 
 
 gower_dist<-daisy(group2_dat, metric="gower",stand=T)
@@ -207,7 +236,6 @@ df %>% ggplot(aes(x = x, y = y)) + geom_point(size = 3, col = 'red') + geom_line
 sil_width[4]
 pam_fit2 <- pam(gower_dist, diss = TRUE, k = 4)
 group2_dat[pam_fit2$medoids,]
-
 final_dat$cluster_group2 <- pam_fit2$clustering
 
 
@@ -223,11 +251,9 @@ df %>% ggplot(aes(x = x, y = y)) + geom_point(size = 3, col = 'red') + geom_line
 sil_width[5]
 pam_fit3 <- pam(gower_dist, diss = TRUE, k = 5)
 group3_dat[pam_fit3$medoids,]
-
 final_dat$cluster_group3 <- pam_fit3$clustering
 
 
-#install.packages('klaR')
 gower_dist<-daisy(group4_dat, metric="gower",stand=T)
 sil_width<-c(NA)
 for(i in 2:20){
@@ -251,6 +277,8 @@ final_dat$cluster_group2<-as.factor(final_dat$cluster_group2)
 final_dat$cluster_group3<-as.factor(final_dat$cluster_group3)
 final_dat$cluster_group4<-as.factor(final_dat$cluster_group4)
 
+### 최종독립변수: height, make, drive.wheels, num.of.doors, PC1, PC2, 
+### cluster_group1, cluster_group2, cluster_group3, cluster_group4
 
 
 
@@ -258,11 +286,15 @@ final_dat$cluster_group4<-as.factor(final_dat$cluster_group4)
 
 
 
-####Modeling###
 
+
+
+#### 2. Modeling & Evaluating
+
+
+# Multiple Linear Regression
 str(final_dat)
 ggpairs(final_dat[,c('normalized_losses','height','PC1','PC2')]) ## 선형성이 크게 보이지 않음.
-
 
 model  <- lm(normalized_losses~., data = final_dat)
 summary(model)
@@ -272,11 +304,12 @@ MSE(final_dat[,1],model$fitted.values) ##243.6395
 model  <- lm(normalized_losses~height+make+drive.wheels+num.of.doors+cluster_group4, data = final_dat)
 summary(model)
 MSE(final_dat[,1],model$fitted.values) ##259.8565
-#### linear regression 결과물이 좋지 않음
+####결과물이 좋지 않음
 
 
 
 
+# Random Forest Algorithm
 
 result <- NULL
 for(i in seq(2,10, by = 1)){
@@ -301,6 +334,7 @@ MSE(final_dat[,1],pred_rf) ##46.32688
 
 
 
+# SVM Regression 모델
 
 library(e1071)
 set.seed(123)
@@ -316,4 +350,3 @@ MSE(final_dat[,1],pred) ##10.89811
 boxplot(final_dat$normalized_losses)
 summary(final_dat$normalized_losses)
 
-##MSE 11 값은 나쁘지 않은 결과
