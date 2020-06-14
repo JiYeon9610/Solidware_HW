@@ -4,12 +4,13 @@
 
  -> engine_location 변수 범주가 1개 밖에 존재하지 않아 삭제 처리
 
-### NA 존재하는 column 및 row 확인(column: "num.of.doors", "bore", "stroke") (row: 18,40,41,42,43)
-  -> missForest 패키지 사용하여 random forest 기반 알고리즘 사용하여 NA imputation 처리 진행
+### NA 존재하는 column 및 row 확인
+  - (column: "num.of.doors", "bore", "stroke") (row: 18,40,41,42,43)
+  - missForest 패키지 사용하여 random forest 기반 알고리즘 사용하여 NA imputation 처리 진행
   
 ### corrplot 이용하여 연속형 변수들 사이의 correlation 확인
-  -> 연속형, 범주형 변수 구분하여 list name 저장
-  -> 유사한 경향을 보이는(correlation이 높은) 두 그룹의 변수들 확인
+  - 연속형, 범주형 변수 구분하여 list name 저장
+  - 유사한 경향을 보이는(correlation이 높은) 두 그룹의 변수들 확인
     -1. curb.weight / length / width / price / engine.size
     -2. city.mpg / highway.mpg
   
