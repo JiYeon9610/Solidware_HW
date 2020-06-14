@@ -23,21 +23,40 @@
     1. curb.weight / length / width / price / engine.size -> PC1, PC2(2개 변수)
     2. city.mpg / highway.mpg ->PCA2_2(1개 변수)
     
+    
   2. Random Forest Importance Plot
    - mtry 파라미터 튜닝 후 나온 모델의 importance plot 확인
    - 상위권 5개-> make, height, num of doors, drive.wheels,PC1,PC2 
+   
    
   3. 변수 클러스터링(hclustvar)
    - 앞선 결과에서 상위권에 해당된 변수들은 y를 예측하는데 중요한 역할을 수행할 것이라고 가정
    - 나머지 범주+연속형 변수를 이용하여 변수 클러스터링 진행
    - 4개 그룹
    
+   
   4. 그룹별 clustering 진행(gower distance 이용하여 PAM clustering 진행)
    - 범주형 변수와 연속형 변수가 섞여 있으므로 gower distance 이용
    - 실루엣 값을 이용하여 클러스터 개수 선정
+   
    
   ### 최종독립변수: height, make, drive.wheels, num.of.doors, PC1, PC2, cluster_group1, cluster_group2, cluster_group3, cluster_group4
   
  
  
 ## 2. Modeling & Evaluating
+
+  1. Multiple Linear Regression
+   - 연속형 X 변수들로 scatterplot을 확인 -> 선형성을 발견하기 힘듦
+   - 실제로 modeling을 해본 결과 200 이상의 MSE 도출
+   - 적절한 모델이 X
+   
+  2. Random Forest Algorithm
+   - mtry 파라미터 튜닝 후 최종 모델 선정
+   - MSE 값이 46.326으로 앞선 모델보다는 개선 되었음을 확인할 수 있음
+  
+  3. SVM Regression 모델
+   - gamma, cost 파라미터 값을 튜닝
+   - 가장 설명력이 좋았던 파라미터 값을 이용하여 최종 모델 선정
+   - MSE 값이 10.8981으로 크게 개선되었음을 확인
+   - 최종 모델로 선정
