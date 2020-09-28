@@ -46,6 +46,8 @@
  
 ## 2. Modeling & Evaluating
 
+데이터의 개수가 매우 적어 별도로 train test 셋을 나누지 않고 분석 진행
+
   1. Multiple Linear Regression
    - 연속형 X 변수들로 scatterplot을 확인 -> 선형성을 발견하기 힘듦
    - 실제로 modeling을 해본 결과 200 이상의 MSE 도출
